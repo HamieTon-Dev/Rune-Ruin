@@ -2,34 +2,36 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Project state
+## Workflow
 
-**Rune & Ruin** is an early-stage scaffold: there is no gameplay code yet. Most folders exist but are empty, so don't assume conventions beyond what's listed here. Look at the actual files before relying on any structure.
+Read `BUILD_STATUS.md` before starting and update it when a task is done. It sets the rules, the current milestone and the agent roles: Cursor implements, Claude Code reviews, debugs and tests. Android is the primary target, Windows/Steam must keep working, and the long-term architecture is a server-authoritative MMO (`server/` is planned for Nakama and is still empty). Don't start features outside the current milestone.
 
-## Layout
+## Commands
 
-- `game/`: the Godot 4.7 project (`game/project.godot`), driven through **Summer Engine**, a Godot-based editor. Settings: Mobile renderer, Jolt Physics, D3D12 on Windows, `canvas_items` stretch with `expand` aspect. A `[dotnet]` assembly name is set, but scripts are GDScript unless the user says C#.
-  - Empty subfolders are in place for `scenes/`, `scripts/`, `autoload/`, `ui/`, `assets/`, `audio/`, `materials/` and `shaders/`.
-  - `.summer/local/` holds local-only Summer state (git-ignored). `/android/` and `.godot/` are also ignored.
-- `server/`: planned backend, with empty `nakama/`, `runtime/` and `database/` folders. The intended stack is a Nakama game server.
-- `docs/`: planned design docs, with empty `android/`, `architecture/`, `gameplay/` and `networking/` folders. Android is a target platform.
-
-## Tooling: Summer Engine MCP
-
-The `summer-engine` MCP server (`.mcp.json`, run via `npx summer-engine@latest mcp`) controls the running Summer Engine editor. Setup and health checks come from `AGENTS.md`:
+The project lives in `game/` and is plain Godot 4.7.2 (Mobile renderer, Jolt physics). The binary is `D:\Godot_v4.7.2-stable_win64_console.exe`.
 
 ```
-npx.cmd -y summer-engine@latest login
-npx.cmd -y summer-engine@latest setup claude-code --scope project --yes
-npx.cmd -y summer-engine@latest doctor
+cd game
+<godot> --headless --path . --import                                   # re-import; surfaces parse errors
+<godot> --path . res://tests/smoke_test.tscn                           # end-to-end smoke test, exit 0 = pass
+<godot> --path . --resolution 2400x1080 res://tests/smoke_test.tscn   # check other aspect ratios
+<godot> --path . res://tests/smoke_test.tscn -- --shots-dir=C:/temp/shots
+<godot> --path . -- --touch-ui                                         # play with touch UI on desktop (--no-touch-ui forces it off)
 ```
 
-Working rules:
-- Call `summer_get_project_context` first in a session. It binds the session to the open project.
-- Do not hand-edit `.tscn` / `.tres` files that are open in the editor. The editor's in-memory copy overwrites your edit when it saves. Change open scenes through the `summer_*` tools; scripts, configs and closed scenes can be edited directly.
-- Before building a feature, check the Summer library (`summer_search_library` → `summer_read_library`) for existing skills and templates.
-- After a playthrough, read `summer_get_diagnostics`. Runtime errors live in the debugger, not only the console.
-- A screenshot that is all black usually means the viewport hadn't redrawn yet. Capture it again before drawing conclusions.
-- Project skills live in `.claude/skills/` and `.cursor/skills/`, and `/summer <request>` routes a request to the right skill. Use `playtesting-a-feature` / `verifying-scenes` before claiming that gameplay or scene work is done.
+Run the smoke test **windowed** to verify touch input; GUI touch routing isn't reliable headless. There is no separate unit-test framework. To add coverage, add a section to `tests/smoke_test.gd`. Each section must increment `_sections_completed`, otherwise the run fails.
 
-There is no build, lint or test pipeline yet. You verify work by running the game through the MCP tools (`summer_play`, `summer_screenshot`, `summer_get_diagnostics`).
+## Architecture
+
+- **Input is routed through the `GameInput` autoload** (`autoload/game_input.gd`). Gameplay code reads only `get_move_vector()`, `consume_look_delta()` and `consume_action_press()`. Device sources write in: keyboard, mouse and gamepad are read inside `GameInput`, and the touch controls (`ui/touch_controls.tscn`) call `set_virtual_move` / `add_touch_look` / `press_virtual_action`. Never read `Input` or touch events directly from gameplay scripts.
+- **Default bindings are registered at runtime** in `_register_default_actions()`, and only for actions not already in the Input Map. To add an action, add it there (or in Project Settings).
+- **Gameplay mode is a flag.** `GameInput.gameplay_active` gates all input and mouse capture. Gameplay scenes set it true in `_ready` and false on exit.
+- **Scene flow and the Android back button** live in the `Game` autoload (`autoload/game.gd`). A scene can consume a back press by implementing `handle_back() -> bool`.
+- **Player rig:** `PlayerController` (CharacterBody3D) never rotates; only its `Model` child turns to face movement. `ThirdPersonCamera` yaws, and its SpringArm3D child pitches. Movement is made camera-relative using `camera_rig.yaw`.
+- **UI scaling:** the base size is 1280x720 with `canvas_items` + `expand` stretch. Place UI with anchors inside a `SafeArea` control (`scripts/ui/safe_area.gd`), which insets for notches and cutouts on mobile.
+- **Physics layers:** 1 = world, 2 = player.
+- **Godot 4.7 class names:** 4.7 adds a native `VirtualJoystick` class, so avoid `class_name`s that may clash with engine classes.
+
+## Repo leftovers
+
+`AGENTS.md`, `.mcp.json`, `.claude/skills`, `.cursor/skills` and `game/.summer/` come from Summer Engine, which `BUILD_STATUS.md` says is not part of the workflow.

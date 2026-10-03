@@ -11,17 +11,37 @@ config_version=5
 [application]
 
 config/name="Rune & Ruin"
+config/version="0.0.1"
+run/main_scene="res://scenes/main_menu.tscn"
+config/quit_on_go_back=false
 config/features=PackedStringArray("4.7", "Mobile")
 config/icon="res://icon.svg"
 
+[autoload]
+
+GameInput="*res://autoload/game_input.gd"
+Game="*res://autoload/game.gd"
+
 [display]
 
+window/size/viewport_width=1280
+window/size/viewport_height=720
+window/handheld/orientation=4
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 
 [dotnet]
 
 project/assembly_name="Rune & Ruin"
+
+[gui]
+
+theme/custom="res://ui/theme/main_theme.tres"
+
+[layer_names]
+
+3d_physics/layer_1="world"
+3d_physics/layer_2="player"
 
 [physics]
 
@@ -31,3 +51,4 @@ project/assembly_name="Rune & Ruin"
 
 rendering_device/driver.windows="d3d12"
 renderer/rendering_method="mobile"
+textures/vram_compression/import_etc2_astc=true
