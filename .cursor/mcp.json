@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "summer-engine": {
+      "type": "stdio",
+      "command": "cmd.exe",
+      "args": [
+        "/c",
+        "npx",
+        "-y",
+        "summer-engine@latest",
+        "mcp"
+      ]
+    }
+  }
+}
