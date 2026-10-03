@@ -1,4 +1,4 @@
-\# Rune \& Ruin
+﻿\# Rune \& Ruin
 
 \## Master Game Design \& Development Specification
 
@@ -212,7 +212,7 @@ Later:
 
 LocalPersistence
 
-&#x20;       ↓ replaced by
+&#x20;       â†“ replaced by
 
 ServerPersistence
 
@@ -220,7 +220,7 @@ ServerPersistence
 
 LocalCombatAuthority
 
-&#x20;       ↓ replaced by
+&#x20;       â†“ replaced by
 
 ServerCombatAuthority
 
@@ -278,7 +278,6 @@ The client must eventually NOT be trusted to determine:
 
 \- Marketplace transactions
 
-* Leveling from 1-60 / Player Level 1-60 (From XP earned)
 
 
 
@@ -616,11 +615,11 @@ Conceptually:
 
 Google Play Games Account
 
-&#x20;       ↓
+&#x20;       â†“
 
 Rune \& Ruin Account
 
-&#x20;       ↓
+&#x20;       â†“
 
 Characters
 
@@ -730,7 +729,7 @@ Energy
 
 
 
-\## Rogue Specialization 1 — Shadowblade
+\## Rogue Specialization 1 â€” Shadowblade
 
 
 
@@ -790,7 +789,7 @@ Creates smoke reducing enemy accuracy and allowing repositioning.
 
 
 
-\## Rogue Specialization 2 — Duelist
+\## Rogue Specialization 2 â€” Duelist
 
 
 
@@ -824,7 +823,7 @@ Focused more on direct combat than stealth.
 
 
 
-\## Rogue Specialization 3 — Venomancer
+\## Rogue Specialization 3 â€” Venomancer
 
 
 
@@ -900,7 +899,7 @@ Rage or Fury.
 
 
 
-\## Warrior Specialization 1 — Guardian
+\## Warrior Specialization 1 â€” Guardian
 
 
 
@@ -956,7 +955,7 @@ Increases armor.
 
 
 
-\## Warrior Specialization 2 — Berserker
+\## Warrior Specialization 2 â€” Berserker
 
 
 
@@ -990,7 +989,7 @@ High damage but reduced defense.
 
 
 
-\## Warrior Specialization 3 — Weaponmaster
+\## Warrior Specialization 3 â€” Weaponmaster
 
 
 
@@ -1062,7 +1061,7 @@ Mana.
 
 
 
-\## Cleric Specialization 1 — Lightkeeper
+\## Cleric Specialization 1 â€” Lightkeeper
 
 
 
@@ -1118,7 +1117,7 @@ Emergency high-value heal or damage prevention.
 
 
 
-\## Cleric Specialization 2 — Eclipse
+\## Cleric Specialization 2 â€” Eclipse
 
 
 
@@ -1160,7 +1159,7 @@ Primary DPS specialization.
 
 
 
-\## Cleric Specialization 3 — Balance Priest
+\## Cleric Specialization 3 â€” Balance Priest
 
 
 
@@ -1236,7 +1235,7 @@ Weapons:
 
 
 
-\## Mage Specialization 1 — Pyromancer
+\## Mage Specialization 1 â€” Pyromancer
 
 
 
@@ -1296,7 +1295,7 @@ Major cooldown dealing large-area fire damage.
 
 
 
-\## Mage Specialization 2 — Void Mage
+\## Mage Specialization 2 â€” Void Mage
 
 
 
@@ -1356,7 +1355,7 @@ Large dark magic burst.
 
 
 
-\## Mage Specialization 3 — Arcanist
+\## Mage Specialization 3 â€” Arcanist
 
 
 
@@ -1460,7 +1459,7 @@ Forms may use energy/rage-style resources.
 
 
 
-\## Druid Specialization 1 — Shapeshifter
+\## Druid Specialization 1 â€” Shapeshifter
 
 
 
@@ -1660,7 +1659,7 @@ Fast magical form focused on mobility and evasive combat.
 
 
 
-\## Druid Specialization 2 — Grovekeeper
+\## Druid Specialization 2 â€” Grovekeeper
 
 
 
@@ -1694,7 +1693,7 @@ Uses healing-over-time effects heavily.
 
 
 
-\## Druid Specialization 3 — Stormcaller
+\## Druid Specialization 3 â€” Stormcaller
 
 
 
@@ -1758,7 +1757,7 @@ Mana and/or Conviction.
 
 
 
-\## Paladin Specialization 1 — Dawnbringer
+\## Paladin Specialization 1 â€” Dawnbringer
 
 
 
@@ -1814,7 +1813,7 @@ AOE holy attack.
 
 
 
-\## Paladin Specialization 2 — Dreadguard
+\## Paladin Specialization 2 â€” Dreadguard
 
 
 
@@ -1870,7 +1869,7 @@ Creates damaging ground effect.
 
 
 
-\## Paladin Specialization 3 — Lightwarden
+\## Paladin Specialization 3 â€” Lightwarden
 
 
 
@@ -1968,7 +1967,7 @@ Goblin Continent
 
 
 
-&#x20;         ↓
+&#x20;         â†“
 
 
 
@@ -1976,7 +1975,7 @@ Central Conflict Region
 
 
 
-&#x20;         ↓
+&#x20;         â†“
 
 
 
@@ -2264,7 +2263,7 @@ EMBERWATCH
 
 Recommended Level:
 
-12–20
+12â€“20
 
 
 
@@ -2736,7 +2735,7 @@ Early quests slowly reveal that something much larger is happening.
 
 
 
-\## Quest 1 — A Strange Awakening
+\## Quest 1 â€” A Strange Awakening
 
 
 
@@ -2758,7 +2757,7 @@ Reward:
 
 
 
-\## Quest 2 — Creatures of the Wild
+\## Quest 2 â€” Creatures of the Wild
 
 
 
@@ -2782,7 +2781,7 @@ Reward:
 
 
 
-\## Quest 3 — Marks in the Stone
+\## Quest 3 â€” Marks in the Stone
 
 
 
@@ -2794,7 +2793,7 @@ Investigate mysterious glowing runes.
 
 
 
-\## Quest 4 — The Forgotten Shrine
+\## Quest 4 â€” The Forgotten Shrine
 
 
 
@@ -2806,7 +2805,7 @@ Enter a nearby ruin.
 
 
 
-\## Quest 5 — Arcane Disturbance
+\## Quest 5 â€” Arcane Disturbance
 
 
 
@@ -2818,7 +2817,7 @@ Defeat a corrupted guardian.
 
 
 
-\## Quest 6 — Word to the Capital
+\## Quest 6 â€” Word to the Capital
 
 
 
@@ -4326,7 +4325,7 @@ Current target:
 
 
 
-\*\*Milestone 0 — Playable Android Prototype\*\*
+\*\*Milestone 0 â€” Playable Android Prototype\*\*
 
 
 
@@ -4343,4 +4342,7 @@ Once Milestone 0 is stable, proceed to the character/class foundation.
 
 
 All future development should reference this document as the primary gameplay vision for Rune \& Ruin.
+
+
+
 
