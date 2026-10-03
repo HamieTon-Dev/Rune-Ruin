@@ -2525,6 +2525,8 @@ Avoid requiring pixel-perfect taps.
 
 Players earn:
 
+- Levels 1-60 through XP earned
+
 
 
 \- XP
@@ -4342,6 +4344,7 @@ Once Milestone 0 is stable, proceed to the character/class foundation.
 
 
 All future development should reference this document as the primary gameplay vision for Rune \& Ruin.
+
 
 
 
