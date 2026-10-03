@@ -1,0 +1,11 @@
+# Export output (Android APK/AAB, Windows builds)
+/build/
+
+# Signing material and export secrets must never be committed.
+*.keystore
+*.jks
+*.p12
+*.pfx
+export_credentials.cfg
+.env
+.env.*

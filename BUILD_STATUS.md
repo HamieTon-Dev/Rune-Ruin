@@ -223,3 +223,135 @@ These are not blocking and none were changed in this review:
 4. **Shadow cost on low-end phones.** The directional shadow (60 m distance) is the most expensive thing in the scene. Profile it on a low-end device before adding more lights.
 5. **Mobile renderer on Windows.** The Mobile renderer with D3D12 works for the prototype. Decide whether the Steam build should switch to Forward+ before investing in visuals.
 6. **Summer Engine leftovers.** `AGENTS.md` still contains only Summer Engine setup commands, while the workflow rules live in `BUILD_STATUS.md`. If Summer is dropped, `AGENTS.md`, `.mcp.json`, `.claude/skills`, `.cursor/skills`, `game/.summer/` and `game/project.godot.bak` can be removed together. Left as-is, since that decision belongs to the owner.
+
+---
+
+## Export Pipeline Setup — Cursor (2026-10-03)
+
+Scope: Android and Windows export configuration only. No gameplay code, scenes or project settings were changed. (Milestone 1 was already complete and approved before this task, so this didn't start or touch it.)
+
+### Export presets added (`game/export_presets.cfg`)
+
+| | Android Debug (`preset.0`) | Windows Desktop (`preset.1`) |
+|---|---|---|
+| Package / product | `com.hamietondev.runeruin`, name "Rune & Ruin" | product "Rune & Ruin", company "HamieTon Dev" |
+| Architecture | `arm64-v8a` only (armeabi-v7a, x86, x86_64 off) | `x86_64` |
+| Output | `../build/android/RuneRuin-debug.apk` (APK, not AAB) | `../build/windows/RuneRuin.exe` (separate `.pck`, console wrapper for debug) |
+| Exclude filter | `tests/*` | `tests/*` |
+| Renderer | Mobile (project setting): Vulkan on Android, D3D12 on Windows | same |
+| Orientation | Sensor landscape from `display/window/handheld/orientation=4` (Godot reads it from the project, not the preset) | n/a |
+| Build mode | Prebuilt template, no Gradle build; min/target SDK left at the 4.7.2 defaults (min 24, target 36) | prebuilt template |
+| Version | `version/code=1`, `version/name` empty, so the project version 0.1.0 is used | file/product version empty, so the project version is used |
+| Other | `package/signed=true`, app category Game, `user_data_backup/allow=false`, no permissions (`internet` off until networking) | code signing off, D3D12/ANGLE "Auto" |
+
+Debug export comes first. A release preset will be added once a release keystore exists; it would be the same as `preset.0` plus release signing.
+
+### Secrets
+
+- `export_presets.cfg` contains **no** keystore paths, users or passwords, and no codesign identity or password. A grep for `keystore|password|secret|token|identity` finds nothing.
+- Godot 4.7.2 marks `keystore/*` and `codesign/identity|password` as secret options and stores them in `game/.godot/export_credentials.cfg`, which is ignored (`.godot/`).
+- The debug keystore lives outside the repo, at `%APPDATA%\Godot\keystores\debug.keystore`, and is referenced only from Editor Settings.
+- New root `.gitignore` adds `/build/` (export output) plus `*.keystore`, `*.jks`, `*.p12`, `*.pfx`, `export_credentials.cfg` and `.env*` as a safety net.
+
+### Fullscreen / immersive decision (Android)
+
+**Immersive mode on (`screen/immersive_mode=true`), edge-to-edge off.** It's a landscape action game, so the status and navigation bars are hidden, and a swipe from the edge shows them briefly (`BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE`).
+
+How this fits the existing `SafeArea` (checked against the 4.7.2 Android Java/C++ source):
+
+- With immersive mode on, Godot sets `decorFitsSystemWindows=false` and zero root padding, so the game draws behind the hidden bars **and under the display cutout**.
+- `DisplayServer.get_display_safe_area()` then reports the area excluding the cutout. `SafeArea` already insets from that rect on mobile and re-polls every 0.5 s (the 180° rotation fix), so the HUD, Menu button and touch controls stay clear of the notch.
+- On Android this preset option is the only setting that controls system bars. The project's `display/window/size/mode` isn't applied at startup by `DisplayServerAndroid`, so it stays windowed, and the Windows build keeps opening in a window.
+- `edge_to_edge` only matters when immersive mode is off, so it stays `false`. The target-SDK-35+ edge-to-edge requirement is already met because immersive draws edge to edge.
+
+Still needs a device check: insets on a notched phone in both landscape directions, and whether an edge swipe that starts on the joystick (left side) sometimes triggers the system back gesture or reveals the bars. If it does, move the joystick's resting position further inward.
+
+### Files changed
+
+- `game/export_presets.cfg` (new): the two presets above
+- `.gitignore` (new, repo root): build output and signing/secret patterns
+- `BUILD_STATUS.md`: status header, completed list, this section
+
+### Tests performed
+
+All runs use `D:\Godot_v4.7.2-stable_win64_console.exe`.
+
+| Test | Result |
+|---|---|
+| Headless import after adding the presets | Clean; no errors or warnings |
+| `--export-pack "Android Debug"` and `"Windows Desktop"` (pack only; works without templates) | Both succeed (124 KB packs) |
+| Packs contain `tests/` or `smoke_test`? | **No** for both. Running `res://tests/smoke_test.tscn` from each pack fails with "Cannot open file", which confirms the exclusion |
+| Packs contain `export_credentials`? | No |
+| Main scene run from each pack (`--main-pack ... --quit-after 180`) | No errors |
+| Probe: `GameData` loading from each exported pack | 6 classes, 3 factions (remapped `.tres` load correctly) |
+| `--export-debug "Android Debug"` | Fails as expected: missing templates and SDK (see Blockers) |
+| `--export-debug "Windows Desktop"` | Fails as expected: missing templates |
+| Smoke test, windowed 1280x720 / 2400x1080 / 1024x768 | 154/154 PASS at each |
+| Smoke test, headless | 154/154 PASS |
+
+The smoke test can't run inside an exported build because `tests/` is now excluded, which is what this task intended. For export-only checks, use `--export-pack` plus the `GameData` probe.
+
+### Machine state (what already exists)
+
+| Item | State |
+|---|---|
+| Godot 4.7.2 export templates (`%APPDATA%\Godot\export_templates\4.7.2.stable\`) | **Missing** |
+| Android SDK: Editor Settings `export/android/android_sdk_path` = `C:\Users\steve\AppData\Local/Android/Sdk` | **Folder doesn't exist**; no platform-tools (adb) and no build-tools (apksigner) |
+| JDK: Editor Settings `export/android/java_sdk_path` = Amazon Corretto 21 | Present. Temurin 17 is also installed |
+| Debug keystore (`%APPDATA%\Godot\keystores\debug.keystore`) | Present, created by the editor and referenced in Editor Settings; outside the repo |
+| Android Studio / `ANDROID_HOME` / adb on PATH | None |
+
+### Blockers
+
+Exact output of `--export-debug "Android Debug"`:
+
+```
+No export template found at the expected path:
+C:/Users/steve/AppData/Roaming/Godot/export_templates/4.7.2.stable/android_debug.apk
+Invalid Android SDK path in Editor Settings. Missing 'platform-tools' directory!
+Unable to find Android SDK platform-tools' adb command.
+Invalid Android SDK path in Editor Settings. Missing 'build-tools' directory!
+Unable to find Android SDK build-tools' apksigner command.
+```
+
+Windows only reports the missing `windows_debug_x86_64.exe` / `windows_release_x86_64.exe` templates.
+
+### Exact next manual steps
+
+1. **Install the export templates (needed for both platforms).** Open the project in Godot 4.7.2, then go to Editor → Manage Export Templates → Download and Install. Offline alternative: download `Godot_v4.7.2-stable_export_templates.tpz` from the Godot GitHub release and use "Install from File". Check that `%APPDATA%\Godot\export_templates\4.7.2.stable\android_debug.apk` and `windows_debug_x86_64.exe` exist.
+2. **Install the Android SDK** at the path Editor Settings already uses (`%LOCALAPPDATA%\Android\Sdk`). Either:
+   - Android Studio → SDK Manager, or
+   - Command-line tools only: unzip "Command line tools only" (Windows) from developer.android.com/studio into `%LOCALAPPDATA%\Android\Sdk\cmdline-tools\latest\`, then run:
+     ```
+     cd %LOCALAPPDATA%\Android\Sdk\cmdline-tools\latest\bin
+     sdkmanager --licenses
+     sdkmanager "platform-tools" "build-tools;36.0.0" "platforms;android-36"
+     ```
+   Non-Gradle exports only need `platform-tools` (adb) and `build-tools` (apksigner). `platforms;android-36` matches the 4.7.2 default target SDK and is needed if Gradle builds are turned on later.
+3. **JDK.** Corretto 21 is already set and should work for signing. Godot's docs list JDK 17, and Temurin 17 is installed, so if export complains about Java, set Editor Settings → Export → Android → Java SDK Path to `C:\Program Files\Eclipse Adoptium\jdk-17.0.20.101-hotspot`.
+4. **Debug keystore.** Nothing to do: it exists and Editor Settings points at it. If it's ever deleted, the editor regenerates it on the next start.
+5. **Export:** Project → Export → "Android Debug" → Export Project (Export With Debug), or headless:
+   ```
+   cd game
+   D:\Godot_v4.7.2-stable_win64_console.exe --headless --path . --export-debug "Android Debug" ../build/android/RuneRuin-debug.apk
+   D:\Godot_v4.7.2-stable_win64_console.exe --headless --path . --export-debug "Windows Desktop" ../build/windows/RuneRuin.exe
+   ```
+   Launch `build\windows\RuneRuin.exe` to confirm the Windows build.
+6. **Phone:** enable Developer options → USB debugging, connect it, accept the RSA prompt, then run `adb install -r build\android\RuneRuin-debug.apk`. Alternatively, use the editor's one-click deploy (the Android icon at top right; the preset is marked runnable in the Export dialog).
+7. **Device checks** (from the earlier reviews):
+   - immersive/safe-area insets in both landscape directions on a notched phone
+   - edge swipes versus the joystick and the back gesture
+   - Android back button
+   - joystick, look and pinch feel
+   - soft keyboard on the name step
+   - frame rate and judder at 90/120 Hz (physics interpolation)
+   - shadow cost and thermals
+8. **Release later (don't commit any of it):**
+   - Create an upload keystore outside the repo with `keytool -genkeypair -v -keystore <outside-repo>\runeruin-upload.keystore -alias runeruin -keyalg RSA -keysize 2048 -validity 10000`.
+   - Add an "Android Release" preset with `gradle_build/export_format=1` (AAB) for the Play Store.
+   - Enter the keystore path, user and password only in the Export dialog (saved to the ignored `.godot/export_credentials.cfg`), or supply them through `GODOT_ANDROID_KEYSTORE_RELEASE_PATH`, `GODOT_ANDROID_KEYSTORE_RELEASE_USER` and `GODOT_ANDROID_KEYSTORE_RELEASE_PASSWORD` in CI.
+
+### Notes
+
+- If the editor is opened and the Export dialog saved, Godot rewrites `export_presets.cfg` in its own order and adds any options left out here with their defaults. That's expected, and it still won't write secrets into this file.
+- One-click deploy needs a preset marked "Runnable". In 4.7 that flag is stored by the editor rather than in this file, so tick it once in Project → Export if the Android icon doesn't appear.
