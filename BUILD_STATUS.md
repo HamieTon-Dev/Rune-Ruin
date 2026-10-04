@@ -115,7 +115,7 @@ Known limitations, not blocking:
 - **Headless mode can't verify touch:** GUI routing of touch/mouse isn't reliable headless, so run the smoke test **windowed** to check touch input properly.
 - **No device testing yet:** Android export templates, the Android SDK and an export preset aren't set up on this machine (JDK 21 is installed), so nothing has been run on a phone.
 - **Possible camera judder above 60 Hz:** the camera follows the physics body without physics interpolation, so it may judder slightly on displays above 60 Hz. Revisit when tuning game feel.
-- **Unused Summer Engine leftovers:** `AGENTS.md`, `CLAUDE.md`, `.mcp.json`, `.claude/`, `.cursor/skills/`, `game/.summer/` and `game/project.godot.bak` remain in the repo. Summer isn't part of the workflow; clean these up when convenient.
+- **Summer Engine leftovers:** only `.claude/commands/summer.md` and `.claude/commands/gameskill.md` remain (tracked). `.mcp.json`, `.claude/skills/`, `.cursor/skills/`, `game/.summer/` and `game/project.godot.bak` are gone, and `AGENTS.md` / `CLAUDE.md` are the project's own documents. Summer isn't part of the workflow; the owner can delete the two command files.
 
 ### Tests performed
 
@@ -150,6 +150,8 @@ D:\Godot_v4.7.2-stable_win64_console.exe --path . res://tests/smoke_test.tscn --
 Try touch controls on desktop: `--path . -- --touch-ui` (drive them with the mouse).
 
 ## Next
+
+> Historical (Milestone 0). Steps 2 and 4 are done, and the SDK target is now platform 36; see "Export Pipeline Setup" for the current steps.
 
 **Recommended next task:** set up the Android export pipeline and verify on a device.
 
@@ -219,10 +221,10 @@ These are not blocking and none were changed in this review:
 
 1. **Physics interpolation is off.** Many Android phones run at 90 or 120 Hz while physics ticks at 60 Hz, so judder in the camera and player is likely on device. Before turning on `physics/common/physics_interpolation`, the camera rig, which rotates in `_process`, would need `physics_interpolation_mode = OFF` so mouse and touch look doesn't lag. Evaluate this during the first device playtest.
 2. **Android system bars.** `display/window/size/mode` is windowed, so on Android the status and navigation bars may stay visible (not immersive). Android 15 (target SDK 35) also enforces edge-to-edge. Decide on fullscreen/immersive and edge-to-edge when creating the export preset, and re-check `SafeArea` with that setting.
-3. **Tests would ship in exports.** `game/tests/` will be packed into builds unless the export presets exclude it (e.g. an `exclude_filter` of `tests/*`).
+3. ~~**Tests would ship in exports.**~~ Resolved: both presets use `exclude_filter="tests/*"`.
 4. **Shadow cost on low-end phones.** The directional shadow (60 m distance) is the most expensive thing in the scene. Profile it on a low-end device before adding more lights.
 5. **Mobile renderer on Windows.** The Mobile renderer with D3D12 works for the prototype. Decide whether the Steam build should switch to Forward+ before investing in visuals.
-6. **Summer Engine leftovers.** `AGENTS.md` still contains only Summer Engine setup commands, while the workflow rules live in `BUILD_STATUS.md`. If Summer is dropped, `AGENTS.md`, `.mcp.json`, `.claude/skills`, `.cursor/skills`, `game/.summer/` and `game/project.godot.bak` can be removed together. Left as-is, since that decision belongs to the owner.
+6. **Summer Engine leftovers.** Only `.claude/commands/summer.md` and `.claude/commands/gameskill.md` remain; the other Summer files are gone. Left as-is, since that decision belongs to the owner.
 
 ---
 
@@ -266,11 +268,16 @@ How this fits the existing `SafeArea` (checked against the 4.7.2 Android Java/C+
 
 Still needs a device check: insets on a notched phone in both landscape directions, and whether an edge swipe that starts on the joystick (left side) sometimes triggers the system back gesture or reveals the bars. If it does, move the joystick's resting position further inward.
 
-### Files changed
+### Files created
 
-- `game/export_presets.cfg` (new): the two presets above
-- `.gitignore` (new, repo root): build output and signing/secret patterns
-- `BUILD_STATUS.md`: status header, completed list, this section
+- `game/export_presets.cfg`: the two presets above
+- `.gitignore` (repo root): build output and signing/secret patterns
+
+### Files modified
+
+- `BUILD_STATUS.md`: status header, completed list, this section. Also corrected stale notes: the Summer Engine leftover lists (now only two `.claude/commands/` files) and the "tests would ship in exports" item, and marked the Milestone 0 "Next" list as superseded.
+
+No gameplay scripts, scenes or `project.godot` settings were changed.
 
 ### Tests performed
 
@@ -288,6 +295,17 @@ All runs use `D:\Godot_v4.7.2-stable_win64_console.exe`.
 | `--export-debug "Windows Desktop"` | Fails as expected: missing templates |
 | Smoke test, windowed 1280x720 / 2400x1080 / 1024x768 | 154/154 PASS at each |
 | Smoke test, headless | 154/154 PASS |
+
+Re-verification (follow-up task, same day, templates and SDK still not installed):
+
+| Test | Result |
+|---|---|
+| Headless import | Clean |
+| `--export-pack` both presets; `tests/` in pack? run from pack | Succeed; no `tests/`; main scene runs with no errors |
+| `--export-debug` both presets | Same blockers as below (nothing faked) |
+| **Desktop launch:** windowed main scene, `--quit-after 300` | No errors or warnings |
+| Smoke test, headless / windowed 1024x768 | 154/154 PASS |
+| Smoke test, windowed 1280x720 and 2400x1080 | First run: 2 and 3 checks failed (sideways drift on forward move, joystick release, landing, pinch rotation). Re-ran each twice: **154/154 PASS** all four times. Nothing in game code changed, so this was stray live input or focus on the test window. Keep hands off the keyboard and mouse during windowed runs. |
 
 The smoke test can't run inside an exported build because `tests/` is now excluded, which is what this task intended. For export-only checks, use `--export-pack` plus the `GameData` probe.
 
@@ -318,6 +336,8 @@ Windows only reports the missing `windows_debug_x86_64.exe` / `windows_release_x
 
 ### Exact next manual steps
 
+**The very next step:** install the Godot 4.7.2 export templates (step 1), then the Android SDK packages (step 2). Both are local installs that need your interaction (download size, license acceptance), so they weren't done automatically.
+
 1. **Install the export templates (needed for both platforms).** Open the project in Godot 4.7.2, then go to Editor → Manage Export Templates → Download and Install. Offline alternative: download `Godot_v4.7.2-stable_export_templates.tpz` from the Godot GitHub release and use "Install from File". Check that `%APPDATA%\Godot\export_templates\4.7.2.stable\android_debug.apk` and `windows_debug_x86_64.exe` exist.
 2. **Install the Android SDK** at the path Editor Settings already uses (`%LOCALAPPDATA%\Android\Sdk`). Either:
    - Android Studio → SDK Manager, or
@@ -337,7 +357,7 @@ Windows only reports the missing `windows_debug_x86_64.exe` / `windows_release_x
    D:\Godot_v4.7.2-stable_win64_console.exe --headless --path . --export-debug "Windows Desktop" ../build/windows/RuneRuin.exe
    ```
    Launch `build\windows\RuneRuin.exe` to confirm the Windows build.
-6. **Phone:** enable Developer options → USB debugging, connect it, accept the RSA prompt, then run `adb install -r build\android\RuneRuin-debug.apk`. Alternatively, use the editor's one-click deploy (the Android icon at top right; the preset is marked runnable in the Export dialog).
+6. **Phone:** enable Developer options → USB debugging, connect it, accept the RSA prompt, then run `adb install -r build\android\RuneRuin-debug.apk`. Alternatively, use the editor's one-click deploy: the Android icon at top right, after ticking "Runnable" on the preset in Project → Export (see Notes).
 7. **Device checks** (from the earlier reviews):
    - immersive/safe-area insets in both landscape directions on a notched phone
    - edge swipes versus the joystick and the back gesture
